@@ -21,10 +21,12 @@ namespace Sitecore.Ship.Infrastructure.Update
     public class UpdatePackageRunner : IPackageRunner
     {
         private readonly IPackageManifestRepository _manifestRepository;
+        private readonly IPackageHistoryRepository _packageHistoryRepository;
 
-        public UpdatePackageRunner(IPackageManifestRepository manifestRepository)
+        public UpdatePackageRunner(IPackageManifestRepository manifestRepository, IPackageHistoryRepository packageHistoryRepository)
         {
             _manifestRepository = manifestRepository;
+            _packageHistoryRepository = packageHistoryRepository;
         }
 
         public PackageManifest Execute(string packagePath, bool disableIndexing)
@@ -45,6 +47,14 @@ namespace Sitecore.Ship.Infrastructure.Update
                 var logger = Sitecore.Diagnostics.LoggerFactory.GetLogger(this); // TODO abstractions
                 try
                 {
+                    var packageManifest = _manifestRepository.GetManifest(packagePath);
+                    if (packageManifest.DeployOnlyOnce && _packageHistoryRepository.IsPackageInstalled(packageManifest.PackageName))
+                    {
+                        logger.Info("The package has already been installed. Skipping the installation step.");
+                        packageManifest.IsDeployed = true;
+                        return packageManifest;
+                    }
+
                     entries = UpdateHelper.Install(installationInfo, logger, out historyPath);
 
                     string error = string.Empty;
@@ -69,7 +79,7 @@ namespace Sitecore.Ship.Infrastructure.Update
 
                     logger.Info("Executing post installation actions finished.");
 
-                    return _manifestRepository.GetManifest(packagePath);
+                    return packageManifest;
 
                 }
                 catch (PostStepInstallerException exception)
@@ -84,31 +94,33 @@ namespace Sitecore.Ship.Infrastructure.Update
                     {
                         Sitecore.Configuration.Settings.Indexing.Enabled = true;
                     }
-
-                    try
+                    if (entries != null)
                     {
-                        SaveInstallationMessages(entries, historyPath);
-                    }
-                    catch (Exception)
-                    {
-                        logger.Error("Failed to record installation messages");
-                        foreach (var entry in entries ?? Enumerable.Empty<ContingencyEntry>())
+                        try
                         {
-                            logger.Info(string.Format("Entry [{0}]-[{1}]-[{2}]-[{3}]-[{4}]-[{5}]-[{6}]-[{7}]-[{8}]-[{9}]-[{10}]-[{11}]",
-                                entry.Action,
-                                entry.Behavior,
-                                entry.CommandKey,
-                                entry.Database,
-                                entry.Level,
-                                entry.LongDescription,
-                                entry.MessageGroup,
-                                entry.MessageGroupDescription,
-                                entry.MessageID,
-                                entry.MessageType,
-                                entry.Number,
-                                entry.ShortDescription));
+                            SaveInstallationMessages(entries, historyPath);
                         }
-                        throw;
+                        catch (Exception)
+                        {
+                            logger.Error("Failed to record installation messages");
+                            foreach (var entry in entries ?? Enumerable.Empty<ContingencyEntry>())
+                            {
+                                logger.Info(string.Format("Entry [{0}]-[{1}]-[{2}]-[{3}]-[{4}]-[{5}]-[{6}]-[{7}]-[{8}]-[{9}]-[{10}]-[{11}]",
+                                    entry.Action,
+                                    entry.Behavior,
+                                    entry.CommandKey,
+                                    entry.Database,
+                                    entry.Level,
+                                    entry.LongDescription,
+                                    entry.MessageGroup,
+                                    entry.MessageGroupDescription,
+                                    entry.MessageID,
+                                    entry.MessageType,
+                                    entry.Number,
+                                    entry.ShortDescription));
+                            }
+                            throw;
+                        }
                     }
                 }
             }

@@ -21,7 +21,7 @@ namespace Sitecore.Ship.AspNet.Package
         private readonly IPackageRepository _repository;
         private readonly ITempPackager _tempPackager;
         private readonly IInstallationRecorder _installationRecorder;
-
+        
         public InstallUploadPackageCommand(IPackageRepository repository, ITempPackager tempPackager, IInstallationRecorder installationRecorder)
         {
             _repository = repository;
@@ -30,7 +30,7 @@ namespace Sitecore.Ship.AspNet.Package
         }
 
         public InstallUploadPackageCommand()
-            : this(new PackageRepository(new UpdatePackageRunner(new PackageManifestReader())), 
+            : this(new PackageRepository(new UpdatePackageRunner(new PackageManifestReader(), new PackageHistoryRepository())), 
                    new TempPackager(new ServerTempFile()), 
                    new InstallationRecorder(new PackageHistoryRepository(), new PackageInstallationConfigurationProvider().Settings))
         {           
@@ -56,6 +56,11 @@ namespace Sitecore.Ship.AspNet.Package
                     {
                         var package = new InstallPackage { Path = _tempPackager.GetPackageToInstall(file.InputStream) };
                         manifest = _repository.AddPackage(package);
+                        if(manifest.IsDeployed)
+                        {
+                            JsonResponse(JsonConvert.SerializeObject(new { Result = "Already deployed, skipping." }), HttpStatusCode.OK, context);
+                            return;
+                        }
 
                         _installationRecorder.RecordInstall(uploadPackage.PackageId, uploadPackage.Description, DateTime.Now);
 
@@ -74,7 +79,7 @@ namespace Sitecore.Ship.AspNet.Package
                 catch (NotFoundException)
                 {
                     context.Response.StatusCode = (int) HttpStatusCode.NotFound;
-                }
+                }                
             }
             else if (Successor != null)
             {

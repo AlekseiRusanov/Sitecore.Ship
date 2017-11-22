@@ -7,5 +7,6 @@ namespace Sitecore.Ship.Core.Contracts
     {
         void Add(InstalledPackage record);
         List<InstalledPackage> GetAll();
+        bool IsPackageInstalled(string packageName);
     }
 }

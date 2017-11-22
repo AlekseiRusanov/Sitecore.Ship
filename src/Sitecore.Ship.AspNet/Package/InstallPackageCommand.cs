@@ -27,7 +27,7 @@ namespace Sitecore.Ship.AspNet.Package
         }
 
         public InstallPackageCommand() 
-            : this(new PackageRepository(new UpdatePackageRunner(new PackageManifestReader())),
+            : this(new PackageRepository(new UpdatePackageRunner(new PackageManifestReader(), new PackageHistoryRepository())),
                    new InstallationRecorder(new PackageHistoryRepository(), new PackageInstallationConfigurationProvider().Settings))
         {           
         }
@@ -40,6 +40,11 @@ namespace Sitecore.Ship.AspNet.Package
                 {
                     var package = GetRequest(context.Request);
                     var manifest = _repository.AddPackage(package);
+                    if (manifest.IsDeployed)
+                    {
+                        JsonResponse(JsonConvert.SerializeObject(new { Result = "Already deployed, skipping." }), HttpStatusCode.OK, context);
+                        return;
+                    }
                     _installationRecorder.RecordInstall(package.Path, DateTime.Now);       
 
                     var json = JsonConvert.SerializeObject(new { manifest.Entries });
