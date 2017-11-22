@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Web;
-using System.Web.Helpers;
 
 using Sitecore.Ship.Core;
 using Sitecore.Ship.Core.Contracts;
@@ -10,6 +9,7 @@ using Sitecore.Ship.Core.Services;
 using Sitecore.Ship.Infrastructure.Configuration;
 using Sitecore.Ship.Infrastructure.DataAccess;
 using Sitecore.Ship.Infrastructure.Web;
+using Newtonsoft.Json;
 
 namespace Sitecore.Ship.AspNet.Package
 {
@@ -40,7 +40,7 @@ namespace Sitecore.Ship.AspNet.Package
                     }
                     else
                     {
-                        var json = Json.Encode(new { installedPackage });
+                        var json = JsonConvert.SerializeObject(new { installedPackage });
 
                         JsonResponse(json, HttpStatusCode.OK, context);
                     }
