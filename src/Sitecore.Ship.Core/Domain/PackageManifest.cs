@@ -8,7 +8,6 @@ namespace Sitecore.Ship.Core.Domain
         {
             Entries = new List<PackageManifestEntry>();
             PackageAttributes = new Dictionary<string, string>();
-            DeployOnlyOnce = true;
         }
         
         public List<PackageManifestEntry> Entries { get; private set; }

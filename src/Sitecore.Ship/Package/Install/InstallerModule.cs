@@ -37,6 +37,12 @@ namespace Sitecore.Ship.Package.Install
             {
                 var package = this.Bind<InstallPackage>();
                 var manifest = _repository.AddPackage(package);
+                if (manifest.IsDeployed)
+                {
+                    return Response
+                        .AsJson(new { Entries = new { Result = "Already deployed, skipping." } }, HttpStatusCode.Created)
+                        .WithHeader("Location", ShipServiceUrl.PackageLatestVersion);
+                }
                 _installationRecorder.RecordInstall(package.Path, DateTime.Now);
 
                 if (package.DisableManifest)
@@ -80,6 +86,12 @@ namespace Sitecore.Ship.Package.Install
                                           DisableIndexing = uploadPackage.DisableIndexing
                                       };
                     manifest = _repository.AddPackage(package);
+                    if(manifest.IsDeployed)
+                    {
+                        return Response
+                            .AsJson(new { Result = "Already deployed, skipping." }, HttpStatusCode.Created)
+                            .WithHeader("Location", ShipServiceUrl.PackageLatestVersion);
+                    }
                     _installationRecorder.RecordInstall(uploadPackage.PackageId, uploadPackage.Description, DateTime.Now);
                 }
                 finally 

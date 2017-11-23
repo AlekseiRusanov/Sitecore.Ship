@@ -73,7 +73,12 @@ namespace Sitecore.Ship.AspNet.Package
 
         private static InstallPackage GetRequest(HttpRequestBase request)
         {
-            return new InstallPackage { Path = request.Form["path"] };
+            bool deployOnlyOnce;
+            return new InstallPackage
+            {
+                Path = request.Form["path"],
+                DeployOnlyOnce = bool.TryParse(request.Form["DeployOnlyOnce"], out deployOnlyOnce) ? (bool?)deployOnlyOnce : null
+            };
         }
     }
 }

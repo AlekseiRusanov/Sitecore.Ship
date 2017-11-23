@@ -81,7 +81,7 @@ namespace Sitecore.Ship.Infrastructure.DataAccess
                 //Check in the global log (should always work, even if installed manually):
                 var rootItem = GetGlobalHistoryItem();
                 if (rootItem == null)
-                    return false;
+                    throw new Exception($"{PACKAGE_HISTORY_TEMPLATE_PATH} must be available on core");
                 var installationItems = rootItem.Axes.GetDescendants().Where(item => item.TemplateID == GLOBAL_PACKAGE_REGISTRATION_TEMPLATE_ID).ToList();
                 return installationItems.Any(item => item.Fields[GLOBAL_PACKAGE_NAME_FIELD]?.Value == packageName);
             }

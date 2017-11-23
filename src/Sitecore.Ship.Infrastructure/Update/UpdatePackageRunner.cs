@@ -29,7 +29,7 @@ namespace Sitecore.Ship.Infrastructure.Update
             _packageHistoryRepository = packageHistoryRepository;
         }
 
-        public PackageManifest Execute(string packagePath, bool disableIndexing)
+        public PackageManifest Execute(string packagePath, bool disableIndexing, bool? deployOnlyOnce)
         {
             if (!File.Exists(packagePath)) throw new NotFoundException();
 
@@ -48,7 +48,7 @@ namespace Sitecore.Ship.Infrastructure.Update
                 try
                 {
                     var packageManifest = _manifestRepository.GetManifest(packagePath);
-                    if (packageManifest.DeployOnlyOnce && _packageHistoryRepository.IsPackageInstalled(packageManifest.PackageName))
+                    if ((deployOnlyOnce ?? packageManifest.DeployOnlyOnce) && _packageHistoryRepository.IsPackageInstalled(packageManifest.PackageName))
                     {
                         logger.Info("The package has already been installed. Skipping the installation step.");
                         packageManifest.IsDeployed = true;

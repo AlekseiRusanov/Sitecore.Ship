@@ -54,7 +54,7 @@ namespace Sitecore.Ship.AspNet.Package
                     PackageManifest manifest;
                     try
                     {
-                        var package = new InstallPackage { Path = _tempPackager.GetPackageToInstall(file.InputStream) };
+                        var package = new InstallPackage { Path = _tempPackager.GetPackageToInstall(file.InputStream), DeployOnlyOnce = uploadPackage.DeployOnlyOnce };
                         manifest = _repository.AddPackage(package);
                         if(manifest.IsDeployed)
                         {
@@ -96,11 +96,13 @@ namespace Sitecore.Ship.AspNet.Package
 
         private static InstallUploadPackage GetRequest(HttpRequestBase request)
         {
+            bool deployOnlyOnce;
             return new InstallUploadPackage
-                {
-                    PackageId = request.Form["packageId"],
-                    Description = request.Form["description"]
-                };
+            {
+                PackageId = request.Form["packageId"],
+                Description = request.Form["description"],
+                DeployOnlyOnce = bool.TryParse(request.Form["DeployOnlyOnce"], out deployOnlyOnce) ? (bool?)deployOnlyOnce : null
+            };
         }
     }
 }
