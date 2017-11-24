@@ -83,7 +83,7 @@ namespace Sitecore.Ship.Infrastructure.DataAccess
                 if (rootItem == null)
                     throw new Exception($"{PACKAGE_HISTORY_TEMPLATE_PATH} must be available on core");
                 var installationItems = rootItem.Axes.GetDescendants().Where(item => item.TemplateID == GLOBAL_PACKAGE_REGISTRATION_TEMPLATE_ID).ToList();
-                return installationItems.Any(item => item.Fields[GLOBAL_PACKAGE_NAME_FIELD]?.Value == packageName);
+                return installationItems.Any(item => (item.Fields[GLOBAL_PACKAGE_NAME_FIELD]?.Value ?? string.Empty) == (packageName ?? string.Empty));
             }
         }
 
